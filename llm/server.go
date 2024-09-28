@@ -59,6 +59,7 @@ type llmServer struct {
 	loadProgress float32
 
 	sem *semaphore.Weighted
+	servers map[string]string // List of servers at instantiaton
 }
 
 // LoadModel will load a model from disk. The model must be in the GGML format.
@@ -363,6 +364,7 @@ func NewLlamaServer(gpus gpu.GpuInfoList, model string, ggml *GGML, adapters, pr
 			totalLayers: ggml.KV().BlockCount() + 1,
 			gpus:        gpus,
 			done:        make(chan error, 1),
+			servers:	 getAvailableServers() 
 		}
 
 		s.cmd.Env = os.Environ()
