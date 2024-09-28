@@ -602,7 +602,7 @@ func (runner *runnerRef) needsReload(ctx context.Context, req *LlmRequest) bool 
 	if !reflect.DeepEqual(runner.model.AdapterPaths, req.model.AdapterPaths) || // have the adapters changed?
 		!reflect.DeepEqual(runner.model.ProjectorPaths, req.model.ProjectorPaths) || // have the projectors changed?
 		!reflect.DeepEqual(optsExisting, optsNew) || // have the runner options changed?
-		runner.llama.servers != getAvailableServers() || // have RPC servers changed?
+		!reflect.DeepEqual(runner.llama.servers, getAvailableServers()) || // have RPC servers changed?
 		runner.llama.Ping(ctx) != nil {
 		return true
 	}

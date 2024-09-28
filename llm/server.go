@@ -59,7 +59,7 @@ type llmServer struct {
 	loadProgress float32
 
 	sem *semaphore.Weighted
-	servers []string // List of servers at instantiaton
+	servers map[string]string // List of servers at instantiaton
 }
 
 // LoadModel will load a model from disk. The model must be in the GGML format.
