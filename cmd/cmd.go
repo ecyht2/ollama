@@ -1236,11 +1236,11 @@ func checkServerHeartbeat(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if err := client.Heartbeat(cmd.Context()); err != nil {
-		if !strings.Contains(err.Error(), " refused") {
+		if !(strings.Contains(err.Error(), " refused") || strings.Contains(err.Error(), "could not connect")) {
 			return err
 		}
 		if err := startApp(cmd.Context(), client); err != nil {
-			return errors.New("could not connect to ollama app, is it running?")
+			return fmt.Errorf("ollama server not responding - %w", err)
 		}
 	}
 	return nil
@@ -1428,6 +1428,17 @@ func NewCLI() *cobra.Command {
 		_ = runner.Execute(args[1:])
 	})
 
+	rpcCmd := &cobra.Command{
+		Use:   "rpc",
+		Short: "Start an RPC server for distributed inference",
+		RunE:  rpcServerRun,
+		// PersistentPreRunE from rootCmd will apply
+	}
+
+	rpcCmd.Flags().String("host", "0.0.0.0", "Host address for the RPC server")
+	rpcCmd.Flags().Int("port", 50052, "Port for the RPC server")
+	rpcCmd.Flags().String("device", "", "Device to use (use --device list to see all)")
+
 	envVars := envconfig.AsMap()
 
 	envs := []envconfig.EnvVar{envVars["OLLAMA_HOST"]}
@@ -1444,6 +1455,7 @@ func NewCLI() *cobra.Command {
 		copyCmd,
 		deleteCmd,
 		serveCmd,
+		rpcCmd,
 	} {
 		switch cmd {
 		case runCmd:
@@ -1465,6 +1477,7 @@ func NewCLI() *cobra.Command {
 				envVars["OLLAMA_LLM_LIBRARY"],
 				envVars["OLLAMA_GPU_OVERHEAD"],
 				envVars["OLLAMA_LOAD_TIMEOUT"],
+				envVars["OLLAMA_RPC_SERVERS"],
 			})
 		default:
 			appendEnvDocs(cmd, envs)
@@ -1484,6 +1497,7 @@ func NewCLI() *cobra.Command {
 		copyCmd,
 		deleteCmd,
 		runnerCmd,
+		rpcCmd,
 	)
 
 	return rootCmd
